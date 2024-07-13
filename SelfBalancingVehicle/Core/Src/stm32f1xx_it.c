@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "Motors.h"
 #include "SerialPort.h"
+#include "BalanceControl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -234,6 +235,20 @@ void DMA1_Channel5_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles EXTI line[9:5] interrupts.
+  */
+void EXTI9_5_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI9_5_IRQn 0 */
+
+  /* USER CODE END EXTI9_5_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(MotorEncoder_Right_A_Pin);
+  /* USER CODE BEGIN EXTI9_5_IRQn 1 */
+
+  /* USER CODE END EXTI9_5_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM1 update interrupt.
   */
 void TIM1_UP_IRQHandler(void)
@@ -284,10 +299,11 @@ void EXTI15_10_IRQHandler(void)
   /* USER CODE BEGIN EXTI15_10_IRQn 0 */
 
   /* USER CODE END EXTI15_10_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(MotorEncoder_Left_B_Pin);
   HAL_GPIO_EXTI_IRQHandler(MotorEncoder_Left_A_Pin);
-  HAL_GPIO_EXTI_IRQHandler(MotorEncoder_Right_A_Pin);
+  HAL_GPIO_EXTI_IRQHandler(MotorEncoder_Right_B_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
-	
+
   /* USER CODE END EXTI15_10_IRQn 1 */
 }
 
@@ -296,15 +312,17 @@ void EXTI15_10_IRQHandler(void)
 // 重写外部中断回调
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	OnEXTIHandlerForMotorEncoders(GPIO_Pin);	// 处理电机编码器测速
+	OnEXTIForMotorEncoders(GPIO_Pin);	// 处理电机编码器测速
 }
 
 // 重写定时器中断回调
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if(htim->Instance == TIM1)	// 定时器1，周期10ms
+	if(htim->Instance == TIM1)	// 定时器1，周期1ms
 	{
-		OnTimerHandlerForMotorEncoders(10);	// 处理电机编码器测速
+		OnTIMForMotorEncoders(1);	// 处理电机编码器测速
+		
+		OnTIMForBalanceControl();	// 平衡控制定时任务
 	}
 }
 
@@ -342,5 +360,27 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(huart->Instance == USART1)
 		OnUartTransmitCompleteForSerialTx();
+}
+
+// 重写串口错误状态中断回调
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    if(huart->Instance == USART1)
+    {
+      //__HAL_UNLOCK(huart);
+			OnUartErrorForSerial();
+       //HAL_UARTEx_Receive_DMA(huart, (uint8_t*)receive_buff, 20);
+    }
+}
+
+// 重写I2C总线错误状态中断回调
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
+{
+	if(hi2c->ErrorCode != HAL_I2C_ERROR_NONE)
+	{
+		// 暂定I2C错误时处理方案为：重新初始化
+		HAL_I2C_DeInit(hi2c);
+		HAL_I2C_Init(hi2c);
+	}
 }
 /* USER CODE END 1 */

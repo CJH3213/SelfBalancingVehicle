@@ -1,5 +1,5 @@
-selfbalancingvehicle\serialport.o: ..\MyFiles\HardwareDriver\SerialPort\SerialPort.c
-selfbalancingvehicle\serialport.o: ../MyFiles/HardwareDriver/Include/SerialPort.h
+selfbalancingvehicle\serialport.o: ..\MyFiles\FunctionalModle\SerialPort\SerialPort.c
+selfbalancingvehicle\serialport.o: ../MyFiles/FunctionalModle/Include/SerialPort.h
 selfbalancingvehicle\serialport.o: ../Core/Inc/main.h
 selfbalancingvehicle\serialport.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 selfbalancingvehicle\serialport.o: ../Core/Inc/stm32f1xx_hal_conf.h
@@ -31,3 +31,4 @@ selfbalancingvehicle\serialport.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx
 selfbalancingvehicle\serialport.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 selfbalancingvehicle\serialport.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 selfbalancingvehicle\serialport.o: ../Core/Inc/usart.h
+selfbalancingvehicle\serialport.o: D:\Keil\ARM\ARMCC\Bin\..\include\stdio.h

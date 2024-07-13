@@ -31,7 +31,10 @@
 #include "Motors.h"
 #include "oled.h"
 #include "mpu6050.h"
+#include "inv_mpu.h"
 #include "SerialPort.h"
+#include "Protocol.h"
+#include "BalanceControl.h"
 
 /* USER CODE END Includes */
 
@@ -75,6 +78,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 //	int16_t ax, ay, az;
+//	float pitch, roll, yaw;
 
 //	uint8_t rxData[50];
 //	uint32_t rxLen;
@@ -106,30 +110,37 @@ int main(void)
   MX_TIM1_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-	// 启动定时器中断
-	HAL_TIM_Base_Start_IT(&htim1);
+	
 	// 启动PWM输出
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+	SetLeftMotor(0);
+	SetRightMotor(0);
+
 	// 串口初始化
 	SerialPortOpen();
 
-	OLED_Init();			//初始化OLED
-	OLED_ShowString(4*16,1,"BY:CJH2",8);
+//	OLED_Init();			//初始化OLED
+//	OLED_ShowString(4*16,1,"BY:CJH2",8);
 	
 	// 初始化MPU6050
-	while(MPU_Init() != 0){};
-
+	// MPU_Init();
+	while( mpu_dmp_init() ){};
+		
+	// 启动定时器中断
+	HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		//HAL_Delay(5000);
-		Test();
+//		HAL_Delay(500);
+		// Test();
+		// ProtocolEncode("1234\x7D\x7E", 6);
+		ProtocolDecode(NULL, 0);
 		
 //		SerialRead(rxData, &rxLen);
 //		if(rxLen > 0)
@@ -153,6 +164,12 @@ int main(void)
 //		ay = GetRightMotorSpeed();
 //		
 //		//az = 32767;
+
+//		if(mpu_dmp_get_data(&pitch, &roll, &yaw) != 0)
+//			continue;
+		OnMainForBalanceControl();
+		
+//		ax = pitch * 10;	// 俯仰角（±90°，平衡角）
 //		if(ax < 0)
 //		{
 //			OLED_ShowChar(0, 0, '-', 6);
@@ -162,6 +179,7 @@ int main(void)
 //			OLED_ShowChar(0, 0, ' ', 6);
 //		OLED_ShowNum(1*6, 0, ax, 5, 6);
 //		
+//		ay = roll * 10;		// 横滚角（±180°）
 //		if(ay < 0)
 //		{
 //			OLED_ShowChar(0, 1, '-', 6);
@@ -171,6 +189,7 @@ int main(void)
 //			OLED_ShowChar(0, 1, ' ', 6);
 //		OLED_ShowNum(1*6, 1, ay, 5, 6);
 //		
+//		az = yaw * 10;		// 航向角（0~360°）
 //		if(az < 0)
 //		{
 //			OLED_ShowChar(0, 2, '-', 6);

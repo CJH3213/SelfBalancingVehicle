@@ -31,4 +31,4 @@ selfbalancingvehicle\mpu6050.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ha
 selfbalancingvehicle\mpu6050.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 selfbalancingvehicle\mpu6050.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 selfbalancingvehicle\mpu6050.o: ../Core/Inc/i2c.h
-selfbalancingvehicle\mpu6050.o: ../MyFiles/FunctionModle/Include/delay.h
+selfbalancingvehicle\mpu6050.o: ../MyFiles/FunctionalModle/Include/Delay.h

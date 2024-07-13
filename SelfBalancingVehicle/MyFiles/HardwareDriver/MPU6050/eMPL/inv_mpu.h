@@ -20,7 +20,7 @@
 
 #ifndef _INV_MPU_H_
 #define _INV_MPU_H_
-#include "stm32f4xx.h"
+// #include "stm32f4xx.h"
 
 //定义输出速度
 #define DEFAULT_MPU_HZ  (100)		//100Hz
@@ -127,13 +127,15 @@ int mpu_reg_dump(void);
 int mpu_read_reg(unsigned char reg, unsigned char *data);
 int mpu_run_self_test(long *gyro, long *accel);
 int mpu_register_tap_cb(void (*func)(unsigned char, unsigned char));
+
+
 //自行添加的一些函数
 void mget_ms(unsigned long *time);
 unsigned short inv_row_2_scale(const signed char *row);
 unsigned short inv_orientation_matrix_to_scalar(const signed char *mtx);
-u8 run_self_test(void);
-u8 mpu_dmp_init(void);
-u8 mpu_dmp_get_data(float *pitch,float *roll,float *yaw);
+unsigned char run_self_test(void);
+unsigned char mpu_dmp_init(void);
+unsigned char mpu_dmp_get_data(float *pitch,float *roll,float *yaw);
 
 #endif  /* #ifndef _INV_MPU_H_ */
 

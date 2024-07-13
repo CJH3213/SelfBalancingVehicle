@@ -1,5 +1,5 @@
-selfbalancingvehicle\delay.o: ..\MyFiles\FunctionModle\delay\delay.c
-selfbalancingvehicle\delay.o: ../MyFiles/FunctionModle/Include/delay.h
+selfbalancingvehicle\delay.o: ..\MyFiles\FunctionalModle\Delay\Delay.c
+selfbalancingvehicle\delay.o: ../MyFiles/FunctionalModle/Include/delay.h
 selfbalancingvehicle\delay.o: ../Core/Inc/main.h
 selfbalancingvehicle\delay.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 selfbalancingvehicle\delay.o: ../Core/Inc/stm32f1xx_hal_conf.h

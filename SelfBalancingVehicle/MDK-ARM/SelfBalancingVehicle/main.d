@@ -34,9 +34,12 @@ selfbalancingvehicle\main.o: ../Core/Inc/i2c.h
 selfbalancingvehicle\main.o: ../Core/Inc/tim.h
 selfbalancingvehicle\main.o: ../Core/Inc/usart.h
 selfbalancingvehicle\main.o: ../Core/Inc/gpio.h
-selfbalancingvehicle\main.o: ../MyFiles/FunctionModle/Include/delay.h
+selfbalancingvehicle\main.o: ../MyFiles/FunctionalModle/Include/delay.h
 selfbalancingvehicle\main.o: ../MyFiles/HardwareDriver/Include/Motors.h
 selfbalancingvehicle\main.o: ../MyFiles/HardwareDriver/Include/oled.h
 selfbalancingvehicle\main.o: ../MyFiles/HardwareDriver/Include/my_IIC.h
 selfbalancingvehicle\main.o: ../MyFiles/HardwareDriver/Include/mpu6050.h
-selfbalancingvehicle\main.o: ../MyFiles/HardwareDriver/Include/SerialPort.h
+selfbalancingvehicle\main.o: ../MyFiles/HardwareDriver/MPU6050/eMPL/inv_mpu.h
+selfbalancingvehicle\main.o: ../MyFiles/FunctionalModle/Include/SerialPort.h
+selfbalancingvehicle\main.o: ../MyFiles/FunctionalModle/Include/Protocol.h
+selfbalancingvehicle\main.o: ../MyFiles/FunctionalModle/Include/BalanceControl.h

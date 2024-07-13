@@ -25,7 +25,7 @@
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h"
 #include "mpu6050.h"
-#include "delay.h"
+#include "Delay.h"
 #include "usart.h"
 
 
@@ -52,7 +52,7 @@
 
 #define i2c_write   MPU_Write_Len
 #define i2c_read    MPU_Read_Len
-#define delay_ms    delay_ms
+#define delay_ms    Delay_ms
 #define get_ms      mget_ms
 //static inline int reg_int_cb(struct int_param_s *int_param)
 //{
@@ -767,7 +767,7 @@ int mpu_init(void)
     data[0] = BIT_RESET;
     if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data))
         return -1;
-    delay_ms(100);
+    Delay_ms(100);
 
     /* Wake up chip. */
     data[0] = 0x00;
@@ -2874,12 +2874,12 @@ static signed char gyro_orientation[9] = { 1, 0, 0,
 //MPU6050自测试
 //返回值:0,正常
 //    其他,失败
-u8 run_self_test(void)
+unsigned char run_self_test(void)
 {
 	int result;
 	//char test_packet[4] = {0};
 	long gyro[3], accel[3]; 
-	result = mpu_run_self_test(gyro, accel);
+	result = mpu_run_self_test(gyro, accel);	// 通过自测试获取偏离值
 	if (result == 0x3) 
 	{
 		/* Test passed. We can trust the gyro data here, so let's push it down
@@ -2887,12 +2887,13 @@ u8 run_self_test(void)
 		*/
 		float sens;
 		unsigned short accel_sens;
-		mpu_get_gyro_sens(&sens);
+		mpu_get_gyro_sens(&sens);		// 获取量程对应的缩放系数
 		gyro[0] = (long)(gyro[0] * sens);
 		gyro[1] = (long)(gyro[1] * sens);
 		gyro[2] = (long)(gyro[2] * sens);
 		dmp_set_gyro_bias(gyro);
-		mpu_get_accel_sens(&accel_sens);
+//		mpu_get_accel_sens(&accel_sens);
+		accel_sens = 0;			// 不读取当前重力状态，让默认的-z轴作重力加速度轴
 		accel[0] *= accel_sens;
 		accel[1] *= accel_sens;
 		accel[2] *= accel_sens;
@@ -2950,10 +2951,10 @@ void mget_ms(unsigned long *time)
 //mpu6050,dmp初始化
 //返回值:0,正常
 //    其他,失败
-u8 mpu_dmp_init(void)
+unsigned char mpu_dmp_init(void)
 {
-	u8 res=0;
-	IIC_Init(); 		//初始化IIC总线
+	unsigned char res=0;
+	// IIC_Init(); 		//初始化IIC总线，现由HAL库初始化I2C
 	if(mpu_init()==0)	//初始化MPU6050
 	{	 
 		res=mpu_set_sensors(INV_XYZ_GYRO|INV_XYZ_ACCEL);//设置所需要的传感器
@@ -2985,7 +2986,7 @@ u8 mpu_dmp_init(void)
 //yaw:航向角   精度:0.1°   范围:-180.0°<---> +180.0°
 //返回值:0,正常
 //    其他,失败
-u8 mpu_dmp_get_data(float *pitch,float *roll,float *yaw)
+unsigned char mpu_dmp_get_data(float *pitch,float *roll,float *yaw)
 {
 	float q0=1.0f,q1=0.0f,q2=0.0f,q3=0.0f;
 	unsigned long sensor_timestamp;
@@ -3010,9 +3011,12 @@ u8 mpu_dmp_get_data(float *pitch,float *roll,float *yaw)
 		q2 = quat[2] / q30;
 		q3 = quat[3] / q30; 
 		//计算得到俯仰角/横滚角/航向角
-		*pitch = asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3;	// pitch
-		*roll  = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3;	// roll
-		*yaw   = atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;	//yaw
+		if(pitch != NULL)
+			*pitch = asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3;	// pitch
+		if(roll != NULL)
+			*roll  = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3;	// roll
+		if(yaw != NULL)
+			*yaw   = atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;	//yaw
 	}else return 2;
 	return 0;
 }

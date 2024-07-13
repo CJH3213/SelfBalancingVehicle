@@ -30,4 +30,4 @@ selfbalancingvehicle\my_iic.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal
 selfbalancingvehicle\my_iic.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 selfbalancingvehicle\my_iic.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 selfbalancingvehicle\my_iic.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
-selfbalancingvehicle\my_iic.o: ../MyFiles/FunctionModle/Include/delay.h
+selfbalancingvehicle\my_iic.o: ../MyFiles/FunctionalModle/Include/delay.h

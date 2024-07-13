@@ -31,3 +31,4 @@ selfbalancingvehicle\motors.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal
 selfbalancingvehicle\motors.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 selfbalancingvehicle\motors.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 selfbalancingvehicle\motors.o: ../Core/Inc/tim.h
+selfbalancingvehicle\motors.o: D:\Keil\ARM\ARMCC\Bin\..\include\stdio.h

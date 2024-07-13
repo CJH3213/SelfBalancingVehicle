@@ -31,4 +31,5 @@ selfbalancingvehicle\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1
 selfbalancingvehicle\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 selfbalancingvehicle\stm32f1xx_it.o: ../Core/Inc/stm32f1xx_it.h
 selfbalancingvehicle\stm32f1xx_it.o: ../MyFiles/HardwareDriver/Include/Motors.h
-selfbalancingvehicle\stm32f1xx_it.o: ../MyFiles/HardwareDriver/Include/SerialPort.h
+selfbalancingvehicle\stm32f1xx_it.o: ../MyFiles/FunctionalModle/Include/SerialPort.h
+selfbalancingvehicle\stm32f1xx_it.o: ../MyFiles/FunctionalModle/Include/BalanceControl.h

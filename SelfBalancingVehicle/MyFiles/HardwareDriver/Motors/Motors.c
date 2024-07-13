@@ -6,6 +6,7 @@
 
 #include "Motors.h"
 #include "tim.h"
+#include <stdio.h>
 
 
 /**** 电机驱动部分 ****/
@@ -17,26 +18,22 @@ void BrakingRightMotor()
 	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, MAXSPEED);
 }
 
-void SetRightMotor(enum MotorDirection dir, uint16_t speed)
+void SetRightMotor(int16_t speed)
 {
-	// 限制最大占空比
 	if(speed > MAXSPEED)
 		speed = MAXSPEED;
+	else if(speed < -MAXSPEED)
+		speed = -MAXSPEED;
 	
-	switch(dir)
+	if(speed >= 0)
+	{		
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, speed);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
+	}
+	else
 	{
-		case FORWARD:	// 正转
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, speed);
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
-			break;
-		case REVERSE:	//反转
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, speed);
-			break;
-		default:	// 其他参数，速度为0，无刹车
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
-			break;
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, -speed);
 	}
 }
 
@@ -46,25 +43,22 @@ void BrakingLeftMotor()
 	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, MAXSPEED);
 }
 
-void SetLeftMotor(enum MotorDirection dir, uint16_t speed)
+void SetLeftMotor(int16_t speed)
 {
-	if(speed > MAXSPEED)
+	if(speed > MAXSPEED)	// 注意有符型不能跟无符型比较
 		speed = MAXSPEED;
+	else if(speed < -MAXSPEED)
+		speed = -MAXSPEED;
 	
-	switch(dir)
+	if(speed >= 0)
 	{
-		case FORWARD:
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, speed);
-			return;
-		case REVERSE:
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, speed);
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
-			return;
-		default:
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
-			return;
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, speed);
+	}
+	else
+	{		
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, -speed);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
 	}
 }
 
@@ -75,15 +69,27 @@ int16_t _mRightMotorEncoderCount = 0;
 int16_t mLeftMotorSpeed = 0;
 int16_t mRightMotorSpeed = 0;
 
-void OnEXTIHandlerForMotorEncoders(uint16_t GPIO_Pin)
+void OnEXTIForMotorEncoders(uint16_t GPIO_Pin)
 {
 	switch(GPIO_Pin)
 	{
 		case MotorEncoder_Left_A_Pin:	// 左电机A相中断
-			HAL_GPIO_ReadPin(MotorEncoder_Left_B_GPIO_Port, MotorEncoder_Left_B_Pin)?
+			HAL_GPIO_ReadPin(MotorEncoder_Left_A_GPIO_Port, MotorEncoder_Left_A_Pin) ==
+			HAL_GPIO_ReadPin(MotorEncoder_Left_B_GPIO_Port, MotorEncoder_Left_B_Pin) ?
 			_mLeftMotorEncoderCount ++ : _mLeftMotorEncoderCount --;
 			return;
+		case MotorEncoder_Left_B_Pin:	// 左电机B相中断
+			HAL_GPIO_ReadPin(MotorEncoder_Left_A_GPIO_Port, MotorEncoder_Left_A_Pin) !=
+			HAL_GPIO_ReadPin(MotorEncoder_Left_B_GPIO_Port, MotorEncoder_Left_B_Pin) ?
+			_mLeftMotorEncoderCount ++ : _mLeftMotorEncoderCount --;
+			return;
+		case MotorEncoder_Right_B_Pin:	// 右电机A相中断
+			HAL_GPIO_ReadPin(MotorEncoder_Right_A_GPIO_Port, MotorEncoder_Right_A_Pin) ==
+			HAL_GPIO_ReadPin(MotorEncoder_Right_B_GPIO_Port, MotorEncoder_Right_B_Pin) ?
+			_mRightMotorEncoderCount ++ : _mRightMotorEncoderCount --;
+			return;
 		case MotorEncoder_Right_A_Pin:	// 右电机B相中断
+			HAL_GPIO_ReadPin(MotorEncoder_Right_A_GPIO_Port, MotorEncoder_Right_A_Pin) !=
 			HAL_GPIO_ReadPin(MotorEncoder_Right_B_GPIO_Port, MotorEncoder_Right_B_Pin) ?
 			_mRightMotorEncoderCount ++ : _mRightMotorEncoderCount --;
 			return;
@@ -92,17 +98,18 @@ void OnEXTIHandlerForMotorEncoders(uint16_t GPIO_Pin)
 	}
 }
 
-void OnTimerHandlerForMotorEncoders(uint16_t ms)
+void OnTIMForMotorEncoders(uint16_t ms)
 {
-	static uint16_t iicount = 0;
+	static uint16_t tCount = 0;
+	UNUSED(ms);
+
+	tCount ++;
 	
-	iicount ++;
-	
-	if(iicount == 1000-1)
+	if(tCount >= 5)	// 结合定时器，确保每5ms读取一次编码计数值作为速度
 	{
-		iicount = 0;
+		tCount = 0;
 	
-		HAL_GPIO_TogglePin(TestPort_GPIO_Port, TestPort_Pin);
+		// HAL_GPIO_TogglePin(TestPort_GPIO_Port, TestPort_Pin);
 		
 		ms = 1;
 		// 车轮转一圈约为350个计数值
