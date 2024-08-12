@@ -11,11 +11,11 @@ int16_t gGyroY = 0, gGyroZ = 0;
 uint16_t gCountForReport = 0;
 
 float gBalanceUprightKP = 80.0f;//+180.0f;
-float gBalanceUprightKD = 0.4f;//+0.46f;
-float gBalanceUprightMC = -5.0f;//-2.3f;		// 直立环的机械中值
+float gBalanceUprightKD = 0.55f;//+0.46f;
+float gBalanceUprightMC = -4.8f;//-2.3f;		// 直立环的机械中值
 
 float gBalanceVelocityKP = 5.0f;
-float gBalanceVelocityKI = 0.03f;
+float gBalanceVelocityKI = 0.05f;
 
 float gBalanceSteeringKP = 0.0f;
 float gBalanceSteeringKD = 0.0f;
