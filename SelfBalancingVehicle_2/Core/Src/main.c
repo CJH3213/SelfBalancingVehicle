@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "dma.h"
 #include "i2c.h"
 #include "tim.h"
@@ -35,7 +36,10 @@
 #include "SerialPort.h"
 #include "Protocol.h"
 #include "BalanceControl.h"
-
+#include "BLE_HC09.h"
+#include "Key.h"
+#include <stdio.h>
+#include "Battery.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -79,6 +83,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 //	int16_t ax, ay, az;
 //	float pitch, roll, yaw;
+//	uint8_t mpuErrorCount = 0;
 
 //	uint8_t rxData[50];
 //	uint32_t rxLen;
@@ -108,97 +113,103 @@ int main(void)
   MX_I2C1_Init();
   MX_USART1_UART_Init();
   MX_TIM1_Init();
-  MX_I2C2_Init();
+  MX_TIM3_Init();
+  MX_TIM4_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 	
-	// 启动PWM输出
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
-	SetLeftMotor(0);
-	SetRightMotor(0);
+	// 初始化电机驱动
+	InitMotorDriver();
+	// 初始化编码器驱动
+	InitMotorEncodersDriver();
 
 	// 串口初始化
 	SerialPortOpen();
+	
+	// 电压监测初始化
+//	InitBatteryMonitoring();
 
 //	OLED_Init();			//初始化OLED
+//	fill_picture(0xFF);
+	HAL_Delay(100);
 //	OLED_ShowString(4*16,1,"BY:CJH2",8);
-	
+	HAL_Delay(100);
+
 	// 初始化MPU6050
-	// MPU_Init();
+//	OLED_ShowString(0, 0, "MPU is initializing.", 6);
 	while( mpu_dmp_init() ){};
+//	OLED_Clear();
+//	OLED_ShowString(0, 0, "Running.", 6);
+		
+	// 初始化所有按钮标志位
+	InitAllKeys();
+		
 	// 启动定时器中断
-	HAL_TIM_Base_Start_IT(&htim1);
+	HAL_TIM_Base_Start_IT(&htim4);
+
   /* USER CODE END 2 */
-	uint8_t data[100];
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		
 //		HAL_Delay(500);
 		// Test();
 		// ProtocolEncode("1234\x7D\x7E", 6);
-		ProtocolDecode(NULL, 0);
-		
-//		SerialRead(rxData, &rxLen);
-//		if(rxLen > 0)
-//		{
-//			SerialWrite(rxData, rxLen);
-//		}
-		
-//		for(int c = 0; c <= 10; c++)
-//		{
-//				OLED_ShowNum(64, 0, c, 4, 6);
-//			SetLeftMotor(FORWARD, c);
-//		}
-//		delay_ms(1000);
-//		OLED_ShowNum(0, 0, 0, 4, 12);
-//		BrakingLeftMotor();
-//		delay_ms(1000);
-		
-//		MPU_Get_Accelerometer(&ax, &ay, &az);
-//		
-//		ax = GetLeftMotorSpeed();
-//		ay = GetRightMotorSpeed();
-//		
-//		//az = 32767;
+  	ProtocolDecode(NULL, 0);
 
-//		if(mpu_dmp_get_data(&pitch, &roll, &yaw) != 0)
-//			continue;
+		// 按钮状态显示
+//		char keyState = Key1.KEY_DOWN ? '1' : '0';
+//		OLED_Buffer_ShowChar(0, 3*8, keyState, 6);
+//		keyState = Key2.KEY_DOWN ? '1' : '0';
+//		OLED_Buffer_ShowChar(1*6, 3*8, keyState, 6);
+//		keyState = Key3.KEY_DOWN ? '1' : '0';
+//		OLED_Buffer_ShowChar(2*6, 3*8, keyState, 6);
+//		keyState = Key4.KEY_DOWN ? '1' : '0';
+//		OLED_Buffer_ShowChar(3*6, 3*8, keyState, 6);
+		
+		if(Key1.KEY_DOWN)
+		{
+			HAL_NVIC_SystemReset();
+		}
+//			// 暂定I2C错误时处理方案为：重新初始化
+//			HAL_I2C_DeInit(&hi2c1);
+//			HAL_I2C_Init(&hi2c1);
+
+//			HAL_I2C_DeInit(&hi2c2);
+//			HAL_I2C_Init(&hi2c2);
+//			
+//			MX_I2C1_Init();
+//			MX_I2C2_Init();
+//		}
+
+//		if(Key2.KEY_DOWN)
+//		{
+//			while( mpu_dmp_init() ){};
+//		}
+		
+		
 		OnMainForBalanceControl();
 		
-//		ax = pitch * 10;	// 俯仰角（±90°，平衡角）
-//		if(ax < 0)
-//		{
-//			OLED_ShowChar(0, 0, '-', 6);
-//			ax=-ax;
-//		}
-//		else
-//			OLED_ShowChar(0, 0, ' ', 6);
-//		OLED_ShowNum(1*6, 0, ax, 5, 6);
+		// 俯仰角（±90°，平衡角）
+//		OLED_Buffer_ShowString(0, 0, OLED_FloatToString(gPitch+0.05f, 1), 6);
+//		// 横滚角（±180°）
+//		OLED_Buffer_ShowString(0, 1*8, OLED_FloatToString(gRoll+0.05f, 1), 6);
+//		// 航向角（0~360°）
+//		OLED_Buffer_ShowString(0, 2*8, OLED_FloatToString(gYaw+0.05f, 1), 6);
 //		
-//		ay = roll * 10;		// 横滚角（±180°）
-//		if(ay < 0)
-//		{
-//			OLED_ShowChar(0, 1, '-', 6);
-//			ay=-ay;
-//		}
-//		else
-//			OLED_ShowChar(0, 1, ' ', 6);
-//		OLED_ShowNum(1*6, 1, ay, 5, 6);
-//		
-//		az = yaw * 10;		// 航向角（0~360°）
-//		if(az < 0)
-//		{
-//			OLED_ShowChar(0, 2, '-', 6);
-//			az=-az;
-//		}
-//		else
-//			OLED_ShowChar(0, 2, ' ', 6);
-//		OLED_ShowNum(1*6, 2, az, 5, 6);
-//		delay_ms(500);
+//		// 显示电池电压，显示小数点后两位，所以在第三位四舍五入
+//		float batteryVoltage = GetBatteryMillivolt() * 2 / 1000.0f + 0.005f;
+//		OLED_Buffer_ShowString(17*6, 0, OLED_FloatToString(batteryVoltage, 2), 6);
+		
+//		Test(&gSerialPort2);
+		//SerialWrite(&gSerialPort2, (uint8_t*)"USART2", 6);
+//  	printf("p:%.1f, r:%.1f, y:%.1f\r\n", pitch, roll, yaw);
+//		printf("LME:%d, RME:%d\r\n", GetLeftMotorSpeed(), GetRightMotorSpeed());
+//		printf("Battery Voltage: %d mV\r\n", GetBatteryMillivolt());
+		
+//		OLED_Buffer_Refresh();
+//		OLED_Buffer_Clear();
 
 		// 主循环内容
     /* USER CODE END WHILE */
@@ -216,6 +227,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -242,6 +254,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV8;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
